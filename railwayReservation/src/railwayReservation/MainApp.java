@@ -1,6 +1,9 @@
 package railwayReservation;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -19,10 +22,10 @@ public class MainApp {
 
 			switch (choice) {
 			case 1:
-//				bookTrain();
+				bookTrain(train, bookings);
 				break;
 			case 2:
-//				ticketAvailbility();
+				ticketAvailbility(train, bookings);
 				break;
 			case 3:
 				listTrains(train);
@@ -39,10 +42,57 @@ public class MainApp {
 
 	}
 
+	private static void ticketAvailbility(Map<Integer, Train> train, ArrayList<Booking> bookings) {
+		// TODO Auto-generated method stub
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Kindly Enter the Train No to check the seat availability");
+		int trainNo = sc.nextInt();
+		System.out.println("Kindly Enter the date on which you want to check: ");
+		String d = sc.next();
+		SimpleDateFormat s = new SimpleDateFormat("dd-MM-yyyy");
+		Date date = null;
+		try {
+			date = s.parse(d);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		int booked = 0;
+		Train t = train.get(trainNo);
+		if (t == null) {
+			System.out.println("There is no Train available with that no");
+			ticketAvailbility(train, bookings);
+		}
+		for (Booking b : bookings) {
+			if (b.getTrainNo() == trainNo && b.getDateOfTravel().equals(date)) {
+				booked++;
+			}
+		}
+		int capacity = t.getCapacity();
+		int output = capacity - booked;
+		System.out.println("The current availability of the train is " + output);
+
+	}
+
+	private static void bookTrain(Map<Integer, Train> train, ArrayList<Booking> bookings) {
+		// TODO Auto-generated method stub
+
+		Booking b = new Booking();
+		if (b.isAvailable(train, bookings)) {
+			bookings.add(b);
+			System.out.println("Your ticket has been booked successfully");
+		} else {
+			System.out.println("sorry, The train is not available");
+			return;
+		}
+
+	}
+
 	private static void createTrain(Map<Integer, Train> a) {
 		// TODO Auto-generated method stub
-		Train a1 = new Train(1, "Thanjavur Express", 60, "Chennai", "Thanjavur");
-		Train b1 = new Train(2, "Nagarkovil Express", 70, "Chennai", "Nagarkovil");
+		Train a1 = new Train(1, "Thanjavur Express", 2, "Chennai", "Thanjavur");
+		Train b1 = new Train(2, "Nagarkovil Express", 1, "Chennai", "Nagarkovil");
 		Train c1 = new Train(3, "Vaigai Express", 90, "Chennai", "vaigai");
 		Train d1 = new Train(4, "Vande Bharat", 75, "Chennai", "Bangalore");
 
