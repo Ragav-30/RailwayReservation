@@ -1,124 +1,112 @@
 package railwayReservation;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class MainApp {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		Scanner sc = new Scanner(System.in);
-		Map<Integer, Train> train = new HashMap<>();
-		ArrayList<Booking> bookings = new ArrayList<>();
-		createTrain(train);
+		Map<Integer, Train> trainMap = new HashMap<>();
+		Map<Integer, List<Booking>> bookingsMap = new HashMap<>();
+		TrainService trainService = new TrainService();
+		BookingService bookingService = new BookingService();
+
+		// Sample trains creation
+		trainService.createTrain(trainMap, 1, "Thanjavur Express", 2, "Chennai", "Thanjavur");
+		trainService.createTrain(trainMap, 2, "Nagarkovil Express", 1, "Chennai", "Nagarkovil");
+
+		// User menu for interaction
 		while (true) {
 			displayMenu();
 			int choice = sc.nextInt();
+			sc.nextLine(); // Consume newline
 
 			switch (choice) {
 			case 1:
-				bookTrain(train, bookings);
+				bookTicket(sc, trainMap, bookingsMap, bookingService);
 				break;
 			case 2:
-				ticketAvailbility(train, bookings);
+				checkAvailability(sc, trainMap, bookingsMap, bookingService);
 				break;
 			case 3:
-				listTrains(train);
+				listTrains(trainMap, trainService);
 				break;
 			case 4:
-				System.out.println("Thank you for using Railway Booking App. Goodbye!");
+				cancelBooking(sc, bookingsMap, bookingService);
+				break;
+			case 5:
+				System.out.println("Exiting program. Goodbye!");
 				sc.close();
 				return;
 			default:
-				System.out.println("Invalid option. Please try again.");
-			}
-
-		}
-
-	}
-
-	private static void ticketAvailbility(Map<Integer, Train> train, ArrayList<Booking> bookings) {
-		// TODO Auto-generated method stub
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Kindly Enter the Train No to check the seat availability");
-		int trainNo = sc.nextInt();
-		System.out.println("Kindly Enter the date on which you want to check: ");
-		String d = sc.next();
-		SimpleDateFormat s = new SimpleDateFormat("dd-MM-yyyy");
-		Date date = null;
-		try {
-			date = s.parse(d);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		int booked = 0;
-		Train t = train.get(trainNo);
-		if (t == null) {
-			System.out.println("There is no Train available with that no");
-			ticketAvailbility(train, bookings);
-		}
-		for (Booking b : bookings) {
-			if (b.getTrainNo() == trainNo && b.getDateOfTravel().equals(date)) {
-				booked++;
+				System.out.println("Invalid choice. Please try again.");
 			}
 		}
-		int capacity = t.getCapacity();
-		int output = capacity - booked;
-		System.out.println("The current availability of the train is " + output);
-
 	}
 
-	private static void bookTrain(Map<Integer, Train> train, ArrayList<Booking> bookings) {
-		// TODO Auto-generated method stub
-
-		Booking b = new Booking();
-		if (b.isAvailable(train, bookings)) {
-			bookings.add(b);
-			System.out.println("Your ticket has been booked successfully");
-		} else {
-			System.out.println("sorry, The train is not available");
-			return;
-		}
-
-	}
-
-	private static void createTrain(Map<Integer, Train> a) {
-		// TODO Auto-generated method stub
-		Train a1 = new Train(1, "Thanjavur Express", 2, "Chennai", "Thanjavur");
-		Train b1 = new Train(2, "Nagarkovil Express", 1, "Chennai", "Nagarkovil");
-		Train c1 = new Train(3, "Vaigai Express", 90, "Chennai", "vaigai");
-		Train d1 = new Train(4, "Vande Bharat", 75, "Chennai", "Bangalore");
-
-		a.put(1, a1);
-		a.put(2, b1);
-		a.put(3, c1);
-		a.put(4, d1);
-	}
-
-	private static void listTrains(Map<Integer, Train> a) {
-		// TODO Auto-generated method stub
-		a.forEach((k, t) -> {
-			System.out.println(t);
-		});
-	}
-
+	// Display menu options
 	private static void displayMenu() {
-		// TODO Auto-generated method stub
-		System.out.println();
-		System.out.println("Welcome to Railway Booking App");
-		System.out.println("1. Ticket Booking");
-		System.out.println("2. Ticket Availability");
-		System.out.println("3. List Trains");
-		System.out.println("4. Exit");
-		System.out.print("Kindly enter the option you want to continue: ");
-		System.out.println();
+		System.out.println("\n1. Book a Ticket");
+		System.out.println("2. Check Ticket Availability");
+		System.out.println("3. List All Trains");
+		System.out.println("4. Cancel a Booking");
+		System.out.println("5. Exit");
+		System.out.print("Enter your choice: ");
 	}
 
+	private static void bookTicket(Scanner sc, Map<Integer, Train> trainMap, Map<Integer, List<Booking>> bookingsMap,
+			BookingService bookingService) {
+		System.out.print("Enter passenger name: ");
+		String passengerName = sc.nextLine();
+		System.out.print("Enter train number: ");
+		int trainNo = sc.nextInt();
+		System.out.print("Enter travel date (dd-MM-yyyy): ");
+		String dateStr = sc.next();
+		try {
+			Date dateOfTravel = new SimpleDateFormat("dd-MM-yyyy").parse(dateStr);
+			bookingService.createBooking(trainMap, bookingsMap, passengerName, trainNo, dateOfTravel);
+		} catch (Exception e) {
+			System.out.println("Invalid date format. Please try again.");
+		}
+	}
+
+	private static void checkAvailability(Scanner sc, Map<Integer, Train> trainMap,
+			Map<Integer, List<Booking>> bookingsMap, BookingService bookingService) {
+		System.out.print("Enter train number: ");
+		int trainNo = sc.nextInt();
+		System.out.print("Enter travel date (dd-MM-yyyy): ");
+		String dateStr = sc.next();
+		try {
+			Date dateOfTravel = new SimpleDateFormat("dd-MM-yyyy").parse(dateStr);
+			boolean available = bookingService.isAvailable(trainMap, bookingsMap, trainNo, dateOfTravel);
+			System.out.println(available ? "Seats available." : "No seats available.");
+		} catch (Exception e) {
+			System.out.println("Invalid date format.");
+		}
+	}
+
+	private static void listTrains(Map<Integer, Train> trainMap, TrainService trainService) {
+		trainService.listTrains(trainMap);
+	}
+
+	private static void cancelBooking(Scanner sc, Map<Integer, List<Booking>> bookingsMap,
+			BookingService bookingService) {
+		System.out.print("Enter passenger name: ");
+		String passengerName = sc.nextLine();
+		System.out.print("Enter train number: ");
+		int trainNo = sc.nextInt();
+		System.out.print("Enter travel date (dd-MM-yyyy): ");
+		String dateStr = sc.next();
+		try {
+			Date dateOfTravel = new SimpleDateFormat("dd-MM-yyyy").parse(dateStr);
+			bookingService.cancelBooking(bookingsMap, passengerName, trainNo, dateOfTravel);
+		} catch (Exception e) {
+			System.out.println("Invalid date format.");
+		}
+	}
 }
